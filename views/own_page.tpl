@@ -12,5 +12,5 @@
         </div>
     </div>
 </div>
-%auth_html = """<a href="/u/%s">%s</a>""" % (user_info['user_id'],user_info['user_name'])
+%auth_html = """<a href="/u/%s">%s</a>""" % (user_id,user_name)
 %rebase base_template title='Hacker News for "Hacker News for X"', h1Title='Hacker News for "Hacker News for X"', description='Hacker News for "Hacker News for X"', auth_html=auth_html

@@ -45,7 +45,7 @@ def view_user(user_id):
     session = authenticate()
     cur = connect_db()
     if int(session['user_id']) == int(user_id):
-        return template("own_page", user_name=session['user_name'], user_email=session['user_email'])
+        return template("own_page", user_name=session['user_name'], user_email=session['user_email'], user_id=user_id)
     else:
         redirect('/')
 
