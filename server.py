@@ -17,6 +17,7 @@ def index():
     session = authenticate()
     if not session.has_key('user_name'):
         user_info = None
+        session['user_id'] = 0
     else:
         user_info = session
     cur = connect_db()
@@ -27,12 +28,14 @@ def index():
             thread_link,
             hnc_entries.user_id,
             user_name,
-            thread_upvotes
+            thread_upvotes,
+            voted_flag
         FROM hnc_entries
         LEFT JOIN (SELECT thread_id, COUNT(*) AS thread_upvotes FROM hnc_votes GROUP BY thread_id) AS upvotes on hnc_entries.thread_id = upvotes.thread_id
+        LEFT JOIN (SELECT thread_id, 1 AS voted_flag FROM hnc_votes WHERE user_id = %s GROUP BY thread_id) AS voted_flags on hnc_entries.thread_id = voted_flags.thread_id
         LEFT JOIN hnc_users on hnc_entries.user_id = hnc_users.user_id
         LIMIT 35;
-    """)
+    """, (session['user_id'])
     entries = cur.fetchall()
     return template("page", entries=entries, user_info=user_info)
 
@@ -50,6 +53,25 @@ def view_user(user_id):
 @route('/existing/')
 def existing():
     return template("existing", user_dupe=None)
+
+@post('/existing')
+def resend_auth_link():
+    user_email = request.forms.get('user_email')
+    user_auth = random_string(32)
+    cur = connect_db()
+    cur.execute("UPDATE hnc_users SET user_auth = %s WHERE user_email = %s RETURNING user_id;", (user_auth, user_email))
+    send_email('hn4hn4x@gmail.com', user_email, 'Log-in for Hacker News for "Hacker News for X"', gen_welcome_email(user_name, user_auth))
+
+@post('/update')
+@post('/update/')
+def existing_action():
+    session = authenticate()
+    cur = connect_db()
+    if session.has_key('user_name'):
+        cur.execute("""
+            UPDATE hnc_users SET user_email = %s WHERE user_id = %s
+        """, request.forms.get('user_email'), session['user_id'])
+    route('/u/%s' % session['user_id'])
 
 @route('/login/<user_auth>')
 @route('/login/<user_auth>/')

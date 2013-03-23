@@ -4,7 +4,7 @@
         <h2>Account Info for {{user_name}}:</h2>
         <div class="listing">
         <br>
-            <form action="/signup" method="post">
+            <form action="/update" method="post">
                 <label for="user_email">Change Email Address:</label><br>
                 <input type="text" name="user_email" id="user_email" value="{{user_email}}"><br>
                 <input class="btn" type="submit" name="submit" id="submit" value="submit">
