@@ -12,6 +12,7 @@ def random_string(length):
     pool = string.letters + string.digits
     return ''.join(random.choice(pool) for i in xrange(length))
 
+### Shows the main page and listing of links
 @route('/')
 def index():
     session = authenticate()
@@ -39,6 +40,37 @@ def index():
     entries = cur.fetchall()
     return template("page", entries=entries, user_info=user_info)
 
+### Shows the sign up page
+@route('/signup', method='GET')
+@route('/signup/', method='GET')
+def signup():
+    return template("signup", user_dupe=None)
+
+### Takes input from the sign up page and creates a new account
+@post('/signup')
+@post('/signup/')
+def signup_action():
+    session = authenticate()
+    user_name = request.forms.get('user_name')
+    user_email = request.forms.get('user_email')
+    user_auth = random_string(32)
+    cur = connect_db()
+    cur.execute("""
+        SELECT * FROM hnc_users WHERE user_name = %s or user_email = %s;
+    """, (user_name, user_email))
+    if cur.fetchone() is not None:
+        return template('signup', user_dupe=True)
+    cur.execute("""
+        INSERT INTO hnc_users (user_name, user_email, user_auth) VALUES (%s, %s, %s) RETURNING user_id;
+    """, (user_name, user_email, user_auth))
+    user_id = cur.fetchone()[0]
+    session['user_id'] = user_id
+    session['user_name'] = user_name
+    session['user_email'] = user_email
+    send_email('hn4hn4x@gmail.com', user_email, 'Welcome to Hacker News for "Hacker News for X"', gen_welcome_email(user_name, user_auth))
+    redirect('/')
+
+### Shows someone their User page
 @route('/u/<user_id>')
 @route('/u/<user_id/')
 def view_user(user_id):
@@ -49,42 +81,7 @@ def view_user(user_id):
     else:
         redirect('/')
 
-@route('/vote/<thread_id>')
-def process_vote(thread_id):
-    session = authenticate()
-    if not session.has_key('user_name'):
-        redirect('/signup')
-    else:
-        cur = connect_db()
-        cur.execute("""
-            INSERT INTO hnc_votes SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM hnc_votes WHERE thread_id = %s AND user_id = %s)
-        """, (thread_id, session['user_id'], thread_id, session['user_id']))
-        redirect('/')
-
-@route('/existing')
-@route('/existing/')
-def existing():
-    return template("existing", user_dupe=None)
-
-@post('/existing')
-def resend_auth_link():
-    user_email = request.forms.get('user_email')
-    user_auth = random_string(32)
-    cur = connect_db()
-    cur.execute("UPDATE hnc_users SET user_auth = %s WHERE user_email = %s RETURNING user_id;", (user_auth, user_email))
-    send_email('hn4hn4x@gmail.com', user_email, 'Log-in for Hacker News for "Hacker News for X"', gen_welcome_email(user_name, user_auth))
-
-@post('/update')
-@post('/update/')
-def existing_action():
-    session = authenticate()
-    cur = connect_db()
-    if session.has_key('user_name'):
-        cur.execute("""
-            UPDATE hnc_users SET user_email = %s WHERE user_id = %s
-        """, request.forms.get('user_email'), session['user_id'])
-    route('/u/%s' % session['user_id'])
-
+### Logs someone in from their auth link, provided via email
 @route('/login/<user_auth>')
 @route('/login/<user_auth>/')
 def auth_user(user_auth):
@@ -99,6 +96,33 @@ def auth_user(user_auth):
     session['user_email'] = results[2]
     redirect('/')
 
+### This section handles the logic to re-send an auth link to someone
+@route('/existing')
+@route('/existing/')
+def existing():
+    return template("existing", user_dupe=None)
+
+@post('/existing')
+def resend_auth_link():
+    user_email = request.forms.get('user_email')
+    user_auth = random_string(32)
+    cur = connect_db()
+    cur.execute("UPDATE hnc_users SET user_auth = %s WHERE user_email = %s RETURNING user_id;", (user_auth, user_email))
+    send_email('hn4hn4x@gmail.com', user_email, 'Log-in for Hacker News for "Hacker News for X"', gen_welcome_email(user_name, user_auth))
+
+### This allows someone to update their email address associated with their account
+@post('/update')
+@post('/update/')
+def existing_action():
+    session = authenticate()
+    cur = connect_db()
+    if session.has_key('user_name'):
+        cur.execute("""
+            UPDATE hnc_users SET user_email = %s WHERE user_id = %s
+        """, request.forms.get('user_email'), session['user_id'])
+    route('/u/%s' % session['user_id'])
+
+### This next section handles submitting new links to the page
 @route('/submit')
 @route('/submit/')
 def submit():
@@ -123,34 +147,20 @@ def submit_action():
     """, (cur.fetchone()[0], session['user_id']))
     redirect('/')
 
-@route('/signup', method='GET')
-@route('/signup/', method='GET')
-def signup():
-    return template("signup", user_dupe=None)
-
-@post('/signup')
-@post('/signup/')
-def signup_action():
+### Simple voting mechanism
+@route('/vote/<thread_id>')
+def process_vote(thread_id):
     session = authenticate()
-    user_name = request.forms.get('user_name')
-    user_email = request.forms.get('user_email')
-    user_auth = random_string(32)
-    cur = connect_db()
-    cur.execute("""
-        SELECT * FROM hnc_users WHERE user_name = %s or user_email = %s;
-    """, (user_name, user_email))
-    if cur.fetchone() is not None:
-        return template('signup', user_dupe=True)
-    cur.execute("""
-        INSERT INTO hnc_users (user_name, user_email, user_auth) VALUES (%s, %s, %s) RETURNING user_id;
-    """, (user_name, user_email, user_auth))
-    user_id = cur.fetchone()[0]
-    session['user_id'] = user_id
-    session['user_name'] = user_name
-    session['user_email'] = user_email
-    send_email('hn4hn4x@gmail.com', user_email, 'Welcome to Hacker News for "Hacker News for X"', gen_welcome_email(user_name, user_auth))
-    redirect('/')
+    if not session.has_key('user_name'):
+        redirect('/signup')
+    else:
+        cur = connect_db()
+        cur.execute("""
+            INSERT INTO hnc_votes SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM hnc_votes WHERE thread_id = %s AND user_id = %s)
+        """, (thread_id, session['user_id'], thread_id, session['user_id']))
+        redirect('/')
 
+### Generates an email template for a user who just signed up or is resetting their auth link.
 def gen_welcome_email(user_name, user_auth):
     auth_url = "hn4hn4x.herokuapp.com/login/%s" % user_auth
     msg = """
