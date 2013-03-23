@@ -5,7 +5,7 @@
     <div class="span10">
         <h2>&#x25B2;{{counteri}}. <a href="{{entry[2]}}">{{entry[1]}}</a></h2>
         <div class="listing">
-            <p><span class="author">posted by <a href="/u/{{entry[3]}}">{{entry[4]}}</a></span><span class="date"><em>{{entry[5]}} points</em></span></p>
+            <p><span class="author">posted by {{entry[4]}}</span><span class="date"><em>{{entry[5]}} points</em></span></p>
         </div>
     </div>
     %counteri += 1

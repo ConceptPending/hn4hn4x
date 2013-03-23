@@ -36,6 +36,16 @@ def index():
     entries = cur.fetchall()
     return template("page", entries=entries, user_info=user_info)
 
+@route('/u/<user_id>')
+@route('/u/<user_id/')
+def view_user(user_id):
+    session = authenticate()
+    cur = connect_db()
+    if session['user_id'] == user_id:
+        return template("own_page", user_name=session['user_name'], user_email=user_email)
+    else:
+        redirect('/')
+
 @route('/existing')
 @route('/existing/')
 def existing():
@@ -47,11 +57,12 @@ def auth_user(user_auth):
     session = authenticate()
     cur = connect_db()
     cur.execute("""
-        SELECT user_id, user_name FROM hnc_users WHERE user_auth = %s
+        SELECT user_id, user_name, user_email FROM hnc_users WHERE user_auth = %s
     """, (user_auth,))
     results = cur.fetchone()
     session['user_id'] = results[0]
     session['user_name'] = results[1]
+    session['user_email'] = results[2]
     redirect('/')
 
 @route('/submit')
@@ -102,6 +113,7 @@ def signup_action():
     user_id = cur.fetchone()[0]
     session['user_id'] = user_id
     session['user_name'] = user_name
+    session['user_email'] = user_email
     send_email('hn4hn4x@gmail.com', user_email, 'Welcome to Hacker News for "Hacker News for X"', gen_welcome_email(user_name, user_auth))
     redirect('/')
 
