@@ -1,9 +1,13 @@
 <div class="row">
     %counteri = 1
     %for entry in entries:
-    <div class="span1"></div>
+    %if entry[6] != 1:
+    %vote_button = """<a class="vote" href="/vote/%s">&#x25B2;</a>""" % entry[0]
+    %else:
+    %vote_button = """&nbsp;"""
+    %end
     <div class="span10">
-        <h2>&#x25B2;{{counteri}}. <a href="{{entry[2]}}">{{entry[1]}}</a></h2>
+        <h2>{{!vote_button}}{{counteri}}. <a href="{{entry[2]}}">{{entry[1]}}</a></h2>
         <div class="listing">
             <p><span class="author">posted by {{entry[4]}}</span><span class="date"><em>{{entry[5]}} points</em></span></p>
         </div>

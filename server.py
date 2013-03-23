@@ -17,7 +17,6 @@ def index():
     session = authenticate()
     if not session.has_key('user_name'):
         user_info = None
-        session = {}
         session['user_id'] = 0
     else:
         user_info = session
@@ -36,7 +35,7 @@ def index():
         LEFT JOIN (SELECT thread_id, 1 AS voted_flag FROM hnc_votes WHERE user_id = %s GROUP BY thread_id) AS voted_flags on hnc_entries.thread_id = voted_flags.thread_id
         LEFT JOIN hnc_users on hnc_entries.user_id = hnc_users.user_id
         LIMIT 35;
-    """, (session['user_id']))
+    """, (session['user_id'],))
     entries = cur.fetchall()
     return template("page", entries=entries, user_info=user_info)
 
@@ -48,6 +47,18 @@ def view_user(user_id):
     if session['user_id'] == user_id:
         return template("own_page", user_name=session['user_name'], user_email=user_email)
     else:
+        redirect('/')
+
+@route('/vote/<thread_id>')
+def process_vote(thread_id):
+    session = authenticate()
+    if not session.has_key('user_name'):
+        redirect('/signup')
+    else:
+        cur = connect_db()
+        cur.execute("""
+            INSERT INTO hnc_votes SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM hnc_votes WHERE thread_id = %s AND user_id = %s)
+        """, (thread_id, session['user_id'], thread_id, session['user_id'])
         redirect('/')
 
 @route('/existing')
