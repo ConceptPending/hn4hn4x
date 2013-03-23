@@ -27,17 +27,10 @@ def index():
             thread_link,
             hnc_entries.user_id,
             user_name,
-            SUM(thread_upvotes - thread_downvotes) AS "thread_score"
+            thread_upvotes
         FROM hnc_entries
-        LEFT JOIN (SELECT thread_id, COUNT(*) AS thread_upvotes FROM hnc_votes WHERE vote = 'u' GROUP BY thread_id) AS upvotes on hnc_entries.thread_id = upvotes.thread_id
-        LEFT JOIN (SELECT thread_id, COUNT(*) AS thread_downvotes FROM hnc_votes WHERE vote = 'd' GROUP BY thread_id) AS downvotes on hnc_entries.thread_id = downvotes.thread_id
+        LEFT JOIN (SELECT thread_id, COUNT(*) AS thread_upvotes FROM hnc_votes GROUP BY thread_id) AS upvotes on hnc_entries.thread_id = upvotes.thread_id
         LEFT JOIN hnc_users on hnc_entries.user_id = hnc_users.user_id
-        GROUP BY
-            hnc_entries.thread_id,
-            thread_title,
-            thread_link,
-            hnc_entries.user_id,
-            user_name
         LIMIT 35;
     """)
     entries = cur.fetchall()
@@ -78,8 +71,11 @@ def submit_action():
     link = request.forms.get('link')
     cur = connect_db()
     cur.execute("""
-        INSERT INTO hnc_entries (thread_title, thread_link, user_id) VALUES (%s, %s, %s)
+        INSERT INTO hnc_entries (thread_title, thread_link, user_id) VALUES (%s, %s, %s) RETURNING thread_id;
     """, (title, link, session['user_id']))
+    cur.execute("""
+        INSERT INTO hnc_votes (thread_id, user_id) VALUES (%s, %s);
+    """, (cur.fetchone()[0], session['user_id']))
     redirect('/')
 
 @route('/signup', method='GET')
