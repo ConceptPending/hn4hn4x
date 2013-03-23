@@ -58,7 +58,7 @@ def process_vote(thread_id):
         cur = connect_db()
         cur.execute("""
             INSERT INTO hnc_votes SELECT %s, %s WHERE NOT EXISTS (SELECT 1 FROM hnc_votes WHERE thread_id = %s AND user_id = %s)
-        """, (thread_id, session['user_id'], thread_id, session['user_id'])
+        """, (thread_id, session['user_id'], thread_id, session['user_id']))
         redirect('/')
 
 @route('/existing')
