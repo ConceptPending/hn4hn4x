@@ -17,6 +17,7 @@ def index():
     session = authenticate()
     if not session.has_key('user_name'):
         user_info = None
+        session = {}
         session['user_id'] = 0
     else:
         user_info = session
