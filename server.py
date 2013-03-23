@@ -7,6 +7,7 @@ import string
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import random
+import cgi
 
 def random_string(length):
     pool = string.letters + string.digits
@@ -51,8 +52,8 @@ def signup():
 @post('/signup/')
 def signup_action():
     session = authenticate()
-    user_name = request.forms.get('user_name')
-    user_email = request.forms.get('user_email')
+    user_name = cgi.escape(request.forms.get('user_name'))
+    user_email = cgi.escape(request.forms.get('user_email'))
     user_auth = random_string(32)
     cur = connect_db()
     cur.execute("""
@@ -104,7 +105,7 @@ def existing():
 
 @post('/existing')
 def resend_auth_link():
-    user_email = request.forms.get('user_email')
+    user_email = cgi.escape(request.forms.get('user_email'))
     user_auth = random_string(32)
     cur = connect_db()
     cur.execute("UPDATE hnc_users SET user_auth = %s WHERE user_email = %s RETURNING user_id;", (user_auth, user_email))
@@ -136,8 +137,8 @@ def submit():
 @post('/submit')
 def submit_action():
     session = authenticate()
-    title = request.forms.get('title')
-    link = request.forms.get('link')
+    title = cgi.escape(request.forms.get('title'))
+    link = cgi.escape(request.forms.get('link'))
     cur = connect_db()
     cur.execute("""
         INSERT INTO hnc_entries (thread_title, thread_link, user_id) VALUES (%s, %s, %s) RETURNING thread_id;
