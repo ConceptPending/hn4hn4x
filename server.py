@@ -202,6 +202,10 @@ app = SessionMiddleware(app(), session_opts)
 ################################
 #  Define ancillary functions  #
 ################################
+@route('/static/<filename>')
+def serve_static(filename):
+    return static_file(filename, root='static')
+
 def send_email(fromaddr, toaddrs, subject, htmlmsg):
     # The actual mail send
     msg = MIMEMultipart('alternative')

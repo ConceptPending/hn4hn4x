@@ -4,7 +4,7 @@
 		<title>{{title}}</title>
 		<meta name="description" content="{{description}}">
 		<link rel="icon" type="image/png" href="/favicon.png">
-		<link href='/default.css' rel='stylesheet' type='text/css'>
+		<link href='/static/default.css' rel='stylesheet' type='text/css'>
 		<link href='http://fonts.googleapis.com/css?family=Merriweather+Sans' rel='stylesheet' type='text/css'>
 	</head>
 	<body>
