@@ -18,6 +18,6 @@
 %if user_info == None:
 %   auth_html = """<a href="/signup">Sign Up!</a>"""
 %else:
-%   auth_html = """<a href="/user/{{user_info['user_id']}}">%s</a>""" % user_info['user_name']
+%   auth_html = """<a href="/user/%s">%s</a>""" % (user_info['user_id'],user_info['user_name'])
 %end
 %rebase base_template title='Hacker News for "Hacker News for X"', h1Title='Hacker News for "Hacker News for X"', description='Hacker News for "Hacker News for X"', auth_html=auth_html
