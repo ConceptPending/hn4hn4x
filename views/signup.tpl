@@ -12,6 +12,7 @@
                 <input type="text" name="user_name" id="user_name"><br>
                 <label for="user_email">Enter your email address (this is how we authenticate you):</label><br>
                 <input type="text" name="user_email" id="user_email"><br>
+                <p>If you just want to try this out, use an @example.com address, no validation required. You'll be able to change your email by clicking your Username at the top, right of the screen at any time if you decide you like your account.</p>
                 <input class="btn" type="submit" name="submit" id="submit" value="submit">
             </form>
             <br><a href="/existing">Already have an account?</a>
