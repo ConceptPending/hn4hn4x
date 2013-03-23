@@ -35,7 +35,7 @@ def index():
         LEFT JOIN (SELECT thread_id, 1 AS voted_flag FROM hnc_votes WHERE user_id = %s GROUP BY thread_id) AS voted_flags on hnc_entries.thread_id = voted_flags.thread_id
         LEFT JOIN hnc_users on hnc_entries.user_id = hnc_users.user_id
         LIMIT 35;
-    """, (session['user_id'])
+    """, (session['user_id']))
     entries = cur.fetchall()
     return template("page", entries=entries, user_info=user_info)
 
